@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HTML 命名实体列表</title>
+    <link rel="stylesheet" href="style/base.css">
+    <script src="vendor/handlebars.min-v4.7.3.js"></script>
+    <style>
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        h2 {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #333;
+        }
+
+        ul {
+            list-style: none;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            float: left;
+            width: 30%;
+            padding: 10px 5px;
+            border-bottom: 1px solid #333;
+            height: 20px;
+            line-height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h3>html 命名实体表</h3>
+    <p>说明：实体名【codepoint】【符号】</p>
+    <div id="tpl_container">
+
+    </div>
+</div>
+
+<script type="text/x-handlebars-template" id="tpl">
+    <p>共计：{{count}}</p>
+    <div class="cf">
+        <ul>
+            {{#each entities}}
+                <li>
+                    <span>{{@key}}</span>
+                    <span>
+                        {{#with this}}
+                            <span>【{{codepoints}}】</span> <span>【{{characters}}】</span>
+                        {{/with}}
+                    </span>
+                </li>
+            {{/each}}
+        </ul>
+    </div>
+</script>
+<script type="text/x-handlebars-template" id="tpl2">
+    {{#each entities}}
+        <dl>
+            <dt>{{@key}} 【 {{{this.[0].entity}}} 】</dt>
+            <dd>
+                {{#each this}}
+                    <span>【{{this.entity}}】</span>
+                {{/each}}
+            </dd>
+        </dl>
+    {{/each}}
+</script>
+
+<script>
+    // 获取所有命名实体
+    async function get_entities() {
+        let entities = 'data/html_named_entities.json';
+        return fetch(entities).then(function (res) {
+            return res.json();
+        }).then(json => {
+            return json;
+        }).catch(e => {
+            console.log(e);
+        })
+    }
+
+    // 获取 ascii 范围内的命名实体
+    function get_ascii_entities(entities) {
+        let ascii_symbol_entities = {};
+        Object.keys(entities).forEach(key => {
+            let value = entities[key];
+            if (value.codepoints.length === 1 && value.codepoints[0] < 128) {
+                ascii_symbol_entities[key] = value
+            }
+        });
+        return ascii_symbol_entities;
+    }
+
+    // 获取同一个符号对应多个命名实体的列表
+    function get_duplicate_entities(entities) { //
+        let result = {};
+        Object.keys(entities).forEach(key => {
+            let value = entities[key];
+            let codepoints = value.codepoints;
+            // 用 codepoints 做键
+            if (!(codepoints in result)) {
+                result[codepoints] = [];
+            }
+            result[codepoints].push({
+                entity: key
+            })
+        });
+        Object.keys(result).forEach(key => {
+            if (result[key].length === 1) {
+                delete result[key];
+            }
+        });
+        return result;
+    }
+
+    // 获取结尾无需分号的命名实体
+    function get_lax_entities(entities) {
+        let lax_entities = {};
+        Object.keys(entities).forEach(key => {
+            let value = entities[key];
+            if (key.indexOf(';') === -1) {
+                lax_entities[key] = value;
+            }
+        });
+        return lax_entities;
+    }
+
+    // 把实体列表渲染成 HTML
+    function render_entities(entities, tpl_id) {
+        console.log(tpl_id);
+        let len = Object.keys(entities).length;
+        // compile the template
+        var template = Handlebars.compile(document.getElementById(tpl_id).textContent);
+        // execute the compiled template and print the output to the console
+        return template({entities: entities, count: len});
+    }
+
+    async function main() {
+        let entities = await get_entities();
+        let html = '';
+
+        let ascii_entities = get_ascii_entities(entities);
+        html += '<h2>ascii 范围内的命名实体</h2>';
+        html += render_entities(ascii_entities, 'tpl');
+
+        let dup_entities = get_duplicate_entities(ascii_entities);
+        console.log(dup_entities);
+        html += '<h2>对应多个命名实体的</h2>';
+        html += render_entities(dup_entities, 'tpl2');
+
+        let lax_entities = get_lax_entities(entities);
+        html += '<h2>可以不用结尾 ; 的命名实体</h2>';
+        html += render_entities(lax_entities, 'tpl');
+
+        html += '<h2>全部命名实体</h2>';
+        html += render_entities(entities, 'tpl');
+
+        document.getElementById('tpl_container').innerHTML = html;
+    }
+
+    main();
+
+</script>
+
+</body>
+</html>
