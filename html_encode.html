@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HTML 编码</title>
+    <link rel="stylesheet" href="vendor/bootstrap-4.4.1-dist/css/bootstrap.min.css">
+    <script src="vendor/jQuery-v3.4.1.js"></script>
+    <script type="module" src="lib/html_encode.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="row mb-2">
+        <div class="col-12">
+            <h2>HTML 编解码</h2>
+            <textarea class="form-control" name="" id="html_input" cols="30" rows="5"></textarea>
+        </div>
+    </div>
+    <div class="row mb-2">
+        <div class="col-sm">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="encodeOptions" id="encodeOptions_10" value="10"
+                       checked>
+                <label class="form-check-label" for="encodeOptions_10">十进制</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="encodeOptions" id="encodeOptions_16" value="16">
+                <label class="form-check-label" for="encodeOptions_16">十六进制</label>
+            </div>
+            <button id="html-encode" type="button" class="btn btn-outline-primary">encode</button>
+            <button id="html-decode" type="button" class="btn btn-outline-success">decode</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <textarea class="form-control" name="" id="html_output" cols="30" rows="5"></textarea>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h4>insert to html</h4>
+            <div class="col-12" id="tmp">
+
+            </div>
+        </div>
+    </div>
+
+
+</div>
+<script type="module">
+    import {html_encode, html_decode} from "./lib/html_encode.js"
+
+    // html 编码
+    $('#html-encode').click(function () {
+        let html_input = $('#html_input').val();
+        let radix = parseInt($('input[name=encodeOptions]:checked').val());
+
+        let result = html_encode(html_input, radix);
+        $('#html_output').val(result);
+        $('#tmp').html(result);
+    });
+
+    // html 解码
+    $('#html-decode').click(function () {
+        let html_input = $('#html_input').val();
+
+        let result = html_decode(html_input);
+        $('#html_output').val(result);
+        $('#tmp').html(html_input);
+    });
+</script>
+
+</body>
+</html>
